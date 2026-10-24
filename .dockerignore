@@ -6,4 +6,6 @@ __pycache__
 uploads
 staticfiles
 artifacts
-Business_Plan_TeamFlow.pdf
+Business_Plan_Snack.pdf
+frontend/node_modules
+frontend/.next

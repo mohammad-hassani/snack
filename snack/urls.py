@@ -1,9 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
-from chat import views
+from chat import views, api_views
 from chat.forms import LoginForm
 urlpatterns = [
+    path('api/session/', api_views.session),
+    path('api/auth/login/', api_views.sign_in),
+    path('api/auth/signup/', api_views.sign_up),
+    path('api/auth/logout/', api_views.sign_out),
+    path('api/auth/password-reset/', api_views.password_reset),
+    path('api/auth/reset/<str:uidb64>/<str:token>/', api_views.password_confirm),
+    path('api/workspaces/', api_views.workspaces),
+    path('api/invites/<uuid:token>/', api_views.invitation),
     path('', views.home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/signup/', views.signup, name='signup'),

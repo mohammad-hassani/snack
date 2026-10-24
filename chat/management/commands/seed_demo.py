@@ -25,7 +25,7 @@ class Command(BaseCommand):
         people = [('Mina Farhadi', 'mina'), ('Omid Rahimi', 'omid'), ('Sara Ahmadi', 'sara'), ('Daniel Park', 'daniel'), ('Nika Moradi', 'nika')]
         users = []
         for name, handle in people:
-            email = f'{handle}@teamflow.local'
+            email = f'{handle}@snack.local'
             if User.objects.filter(username=email).exists():
                 raise CommandError(f'{email} already exists. No demo accounts were changed.')
             users.append(User.objects.create_user(username=email, email=email, first_name=name, password=password))
@@ -55,4 +55,4 @@ class Command(BaseCommand):
         for user in users[:2]:
             ChannelMember.objects.create(channel=direct, user=user)
         Message.objects.create(channel=direct, sender=users[1], body='Hey Mina! Have a moment to chat about the onboarding flow?')
-        self.stdout.write(self.style.SUCCESS(f'Demo ready. Email: mina@teamflow.local\nPassword: {password}'))
+        self.stdout.write(self.style.SUCCESS(f'Demo ready. Email: mina@snack.local\nPassword: {password}'))

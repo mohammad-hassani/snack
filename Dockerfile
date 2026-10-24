@@ -7,4 +7,4 @@ COPY . .
 RUN useradd --create-home app && mkdir -p /app/uploads /app/staticfiles && chown -R app:app /app
 USER app
 EXPOSE 8000
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p 8000 teamflow.asgi:application"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p 8000 snack.asgi:application"]

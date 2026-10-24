@@ -1,12 +1,12 @@
-"""Run against a development server after seed_demo --password "$TEAMFLOW_DEMO_PASSWORD"."""
+"""Run against a development server after seed_demo --password "$SNACK_DEMO_PASSWORD"."""
 import os
 import re
 import time
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
-BASE = os.getenv('TEAMFLOW_URL', 'http://127.0.0.1:8000')
-PASSWORD = os.environ['TEAMFLOW_DEMO_PASSWORD']
+BASE = os.getenv('SNACK_URL', 'http://127.0.0.1:3000')
+PASSWORD = os.environ['SNACK_DEMO_PASSWORD']
 ARTIFACTS = Path('artifacts')
 ARTIFACTS.mkdir(exist_ok=True)
 
@@ -28,12 +28,12 @@ with sync_playwright() as p:
     page = context.new_page()
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
-    sign_in(page, 'mina@teamflow.local')
+    sign_in(page, 'mina@snack.local')
     page.screenshot(path=str(ARTIFACTS / 'workspace-desktop.png'), full_page=True)
     second = browser.new_context(viewport={'width': 1280, 'height': 900})
     teammate = second.new_page()
     teammate.on('pageerror', lambda error: errors.append(str(error)))
-    sign_in(teammate, 'omid@teamflow.local')
+    sign_in(teammate, 'omid@snack.local')
     assert page.locator('html').get_attribute('lang') == 'fa'
     assert page.locator('html').get_attribute('dir') == 'rtl'
     rail, sidebar, main = [page.locator(selector).bounding_box() for selector in ['.rail', '.sidebar', '.main']]
@@ -84,7 +84,7 @@ with sync_playwright() as p:
     expect(teammate.locator('#channels')).not_to_contain_text(channel_name)
     # Start a DM from the member picker.
     page.locator('#add-dm').click()
-    page.locator('#modal .person').filter(has_text='omid@teamflow.local').click()
+    page.locator('#modal .person').filter(has_text='omid@snack.local').click()
     expect(page.locator('#channel-name')).not_to_have_text(channel_name)
     page.locator('#channels .channel-row').filter(has_text='general').click()
     expect(page.locator('#channel-name')).to_have_text('general')

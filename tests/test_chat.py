@@ -12,9 +12,10 @@ from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 from chat.models import Channel, ChannelMember, Invitation, Membership, Message, Workspace
 from chat.services import send_message
-from teamflow.asgi import application
+from snack.asgi import application
 
 
+@override_settings(FRONTEND_URL='')
 class ChatTests(TestCase):
     @classmethod
     def setUpTestData(cls):

@@ -9,3 +9,7 @@ uploads/
 staticfiles/
 artifacts/
 .pytest_cache/
+node_modules/
+.next/
+.playwright-cli/
+.DS_Store

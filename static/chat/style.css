@@ -1,13 +1,36 @@
 @font-face {
-  font-family: 'Noto Sans Arabic';
-  src: url('fonts/NotoSansArabic-Regular.ttf') format('truetype');
+  font-family: 'IRANYekanXFaNum';
+  src: url('fonts/IRANYekanXFaNum-Regular.ttf') format('truetype');
   font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans Arabic';
-  src: url('fonts/NotoSansArabic-Bold.ttf') format('truetype');
-  font-weight: 600 800;
+  font-family: 'IRANYekanXFaNum';
+  src: url('fonts/IRANYekanXFaNum-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanXFaNum';
+  src: url('fonts/IRANYekanXFaNum-DemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanXFaNum';
+  src: url('fonts/IRANYekanXFaNum-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanXFaNum';
+  src: url('fonts/IRANYekanXFaNum-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
   font-display: swap;
 }
 :root{
@@ -18,7 +41,7 @@
   --navy:#252f47;
   --line:#eceef2;
   --green:#51aa8e;
-  --body:'Noto Sans Arabic',Tahoma,Arial,sans-serif;
+  --body:'IRANYekanXFaNum',Tahoma,Arial,sans-serif;
   --display:var(--body)
 }
 *{

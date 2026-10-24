@@ -1,0 +1,269 @@
+.auth-card form {
+  display: grid;
+  gap: 12px;
+}
+.auth-card input {
+  width: 100%;
+}
+.connection.offline {
+  color: #a34b32;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.modal-error {
+  color: #a32340;
+}
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.person-row .person {
+  flex: 1;
+  text-align: start;
+}
+.person-row select {
+  width: auto;
+}
+
+:root {
+  color-scheme: light;
+}
+.theme-toggle {
+  position: fixed;
+  inset-inline-end: 18px;
+  top: 20px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+}
+.app .topbar {
+  padding-inline-end: 82px;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e5e9f3;
+  --muted: #a6b0c5;
+  --purple: #b2a9ff;
+  --purple-light: #302c4c;
+  --navy: #101522;
+  --line: #343e53;
+  --green: #78cbae;
+}
+[data-theme="dark"] body,
+[data-theme="dark"] .main,
+[data-theme="dark"] .search-results {
+  background: #181e2c;
+}
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .auth-simple {
+  background: #1e2636;
+  border-color: var(--line);
+}
+[data-theme="dark"] .auth-story {
+  background: #262a44;
+}
+[data-theme="dark"] .story-chat,
+[data-theme="dark"] .auth-simple .auth-card,
+[data-theme="dark"] dialog,
+[data-theme="dark"] .theme-toggle,
+[data-theme="dark"] .message-actions {
+  background: #242d40;
+  border-color: var(--line);
+}
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #1b2333;
+  border-color: var(--line);
+}
+[data-theme="dark"] .search,
+[data-theme="dark"] .format-bar,
+[data-theme="dark"] .attachment-link {
+  background: #20293b;
+  border-color: var(--line);
+}
+[data-theme="dark"] .search input {
+  background: transparent;
+}
+[data-theme="dark"] .composer,
+[data-theme="dark"] .invite-button,
+[data-theme="dark"] .mini-avatar {
+  border-color: var(--line);
+}
+[data-theme="dark"] .invite-button,
+[data-theme="dark"] .channel-row .count {
+  background: #242d40;
+}
+[data-theme="dark"] .message:hover,
+[data-theme="dark"] .channel-row:hover,
+[data-theme="dark"] .nav-row:hover,
+[data-theme="dark"] .result:hover {
+  background: #252e42;
+}
+[data-theme="dark"] .channel-row.active,
+[data-theme="dark"] .count,
+[data-theme="dark"] .welcome-symbol,
+[data-theme="dark"] .reply-ref,
+[data-theme="dark"] .reply-banner,
+[data-theme="dark"] #file-preview,
+[data-theme="dark"] .invite-result {
+  background: var(--purple-light);
+  color: #d0caff;
+}
+[data-theme="dark"] .primary,
+[data-theme="dark"] .send-button,
+[data-theme="dark"] .workspace-logo {
+  background: #7165dd;
+  color: #fff;
+}
+[data-theme="dark"] .message-body {
+  color: #d1d8e8;
+}
+[data-theme="dark"] .muted,
+[data-theme="dark"] .auth-story p,
+[data-theme="dark"] .auth-story small,
+[data-theme="dark"] .auth-card .helptext,
+[data-theme="dark"] .auth-card ul,
+[data-theme="dark"] .workspace-caption,
+[data-theme="dark"] .nav-row,
+[data-theme="dark"] .section-heading,
+[data-theme="dark"] .section-heading button,
+[data-theme="dark"] .channel-row:not(.active),
+[data-theme="dark"] .invite-art span,
+[data-theme="dark"] .sidebar-foot p,
+[data-theme="dark"] .sidebar-foot .text-link,
+[data-theme="dark"] .breadcrumb,
+[data-theme="dark"] .breadcrumb b,
+[data-theme="dark"] .breadcrumb span,
+[data-theme="dark"] .search > span,
+[data-theme="dark"] .search kbd,
+[data-theme="dark"] .channel-title > span,
+[data-theme="dark"] .channel-header p,
+[data-theme="dark"] .member-stack,
+[data-theme="dark"] .channel-note,
+[data-theme="dark"] .channel-welcome .eyebrow,
+[data-theme="dark"] .channel-welcome p,
+[data-theme="dark"] .welcome-tags,
+[data-theme="dark"] .welcome-tags > span:first-child,
+[data-theme="dark"] .date-divider,
+[data-theme="dark"] .message-meta time,
+[data-theme="dark"] .message-meta .you,
+[data-theme="dark"] .message-body.deleted,
+[data-theme="dark"] .attachment-link small,
+[data-theme="dark"] .load-older,
+[data-theme="dark"] .typing,
+[data-theme="dark"] .format-bar,
+[data-theme="dark"] .format-hint,
+[data-theme="dark"] .icon-button,
+[data-theme="dark"] .compose-private,
+[data-theme="dark"] .composer-tip,
+[data-theme="dark"] .composer-tip b,
+[data-theme="dark"] .composer-tip span,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] dialog p,
+[data-theme="dark"] .person small,
+[data-theme="dark"] .no-results,
+[data-theme="dark"] .message-actions button {
+  color: var(--muted);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+[data-theme="dark"] .errorlist,
+[data-theme="dark"] .modal-error,
+[data-theme="dark"] .connection.offline {
+  color: #ffa8ba;
+}
+[data-theme="dark"] .connection.online {
+  color: var(--green);
+}
+[data-theme="dark"] .peach {
+  background: #49382f;
+  color: #f4c4a5;
+}
+[data-theme="dark"] .lavender {
+  background: #373054;
+  color: #d3c5ff;
+}
+[data-theme="dark"] .mint {
+  background: #253f37;
+  color: #9fe0c6;
+}
+[data-theme="dark"] .blue {
+  background: #293b54;
+  color: #b3d3ff;
+}
+[data-theme="dark"] .rose {
+  background: #493044;
+  color: #f3bbdd;
+}
+[data-theme="dark"] dialog::backdrop {
+  background: #050914b3;
+}
+@media (max-width: 720px) {
+  .theme-toggle {
+    top: 12px;
+    inset-inline-end: 10px;
+    width: 36px;
+    height: 36px;
+  }
+  .app .topbar {
+    padding-inline-end: 62px;
+  }
+}
+
+.lucide {
+  flex-shrink: 0;
+  vertical-align: middle;
+  stroke-width: 1.8;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-mark,
+.send-button,
+.section-heading button,
+#channel-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-button,
+.invite-button,
+.message-actions button,
+.load-older {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.attachment-link span,
+.welcome-tags > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.reply-ref > .lucide,
+#file-preview > .lucide {
+  margin-inline-end: 5px;
+}
+.composer-tip .lucide {
+  width: 14px;
+  height: 14px;
+}
+.load-older { display: flex; width: fit-content; }

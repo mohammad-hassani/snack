@@ -60,7 +60,7 @@ function renderNav() {
   $('#unread-count').textContent = number.format(unread);
   $('#activity-count').hidden = unread === 0;
 }
-const draftKey = (id) => `teamflow:${state.me?.id}:${workspace}:${id}`;
+const draftKey = (id) => `snack:${state.me?.id}:${workspace}:${id}`;
 function saveDraft() {
   if (!state.current) return;
   try { const key = draftKey(state.current.id); const old = JSON.parse(sessionStorage.getItem(key) || '{}'); sessionStorage.setItem(key, JSON.stringify({ body: $('#message-input').value, clientId: old.clientId || crypto.randomUUID() })); } catch { /* Storage can be disabled by the browser. */ }
@@ -81,7 +81,7 @@ async function openChannel(id) {
   $('#message-input').placeholder = `پیام به ${channel.kind === 'dm' ? '' : '#'}${channel.name}…`;
   $('#message-input').value = draft().body || ''; $('#attachment').value = ''; $('#file-preview').hidden = true; clearReply();
   $('#message-list').replaceChildren(el('p', 'muted', 'در حال بارگذاری گفتگو…')); $('#load-older').hidden = true;
-  localStorage.setItem(`teamflow-channel:${workspace}`, channel.id); renderNav();
+  localStorage.setItem(`snack-channel:${workspace}`, channel.id); renderNav();
   try {
     const data = await api(`/api/channels/${id}/messages/`); if (requestId !== state.activeRequest) return;
     for (const message of data.messages) state.messages.set(message.id, message);
@@ -253,4 +253,4 @@ $('#mobile-menu').onclick = () => $('#sidebar').classList.toggle('open');
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { recover().catch((error) => toast(error.message)); } });
 window.addEventListener('online', () => { if (state.socket?.readyState === WebSocket.CLOSED) connect(); });
 setInterval(() => { socketSend({ event: 'ping' }); refresh().catch(() => {}); }, 20000);
-(async () => { try { await refresh(); const stored = Number(localStorage.getItem(`teamflow-channel:${workspace}`)); const channel = state.channels.find((item) => item.id === stored) || state.channels.find((item) => item.name === 'general') || state.channels[0]; if (channel) await openChannel(channel.id); connect(); } catch (error) { toast(error.message); } })();
+(async () => { try { await refresh(); const stored = Number(localStorage.getItem(`snack-channel:${workspace}`)); const channel = state.channels.find((item) => item.id === stored) || state.channels.find((item) => item.name === 'general') || state.channels[0]; if (channel) await openChannel(channel.id); connect(); } catch (error) { toast(error.message); } })();

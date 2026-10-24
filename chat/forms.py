@@ -25,7 +25,7 @@ class SignupForm(UserCreationForm):
 
 
 class LoginForm(AuthenticationForm):
-    username = forms.EmailField(label='ایمیل', widget=forms.EmailInput(attrs={'dir': 'ltr', 'autocomplete': 'username'}))
+    username = forms.CharField(max_length=150, label='نام کاربری یا ایمیل', widget=forms.TextInput(attrs={'dir': 'ltr', 'autocomplete': 'username'}))
 
     def clean_username(self):
         return self.cleaned_data['username'].strip().lower()

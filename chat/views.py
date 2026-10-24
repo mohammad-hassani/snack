@@ -1,9 +1,9 @@
 import json
 import logging
 from smtplib import SMTPException
-import uuid
 from datetime import timedelta
 from functools import wraps
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -14,12 +14,12 @@ from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.utils.text import slugify
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.cache import never_cache
 from .forms import SignupForm
 from .models import Attachment, Channel, ChannelMember, Invitation, Membership, Message, Workspace
-from .services import accessible_channels, channel_for, display_name, mark_read, mutate_message, rate_limit, send_message, serialize_message
+from .services import accessible_channels, channel_for, display_name, mark_read, mutate_message, rate_limit, send_message, serialize_message, provision_workspace
 
 
 def signup(request):
@@ -57,30 +57,30 @@ def create_workspace(request):
     if not name or len(name) > 80:
         messages.error(request, 'نام فضای کاری باید بین ۱ تا ۸۰ نویسه باشد.')
         return redirect('home')
-    with transaction.atomic():
-        workspace = Workspace.objects.create(name=name, slug=f'{slugify(name)[:40] or "team"}-{uuid.uuid4().hex[:8]}')
-        Membership.objects.create(workspace=workspace, user=request.user, role='admin')
-        for name, description in [('general', 'جایی برای خبرهای تیم، پرسش‌ها و گفتگوهای خوب.'), ('introductions', 'خودتان را معرفی کنید و با هم‌تیمی‌ها آشنا شوید.')]:
-            channel = Channel.objects.create(workspace=workspace, name=name, description=description, created_by=request.user)
-            ChannelMember.objects.create(channel=channel, user=request.user)
+    workspace = provision_workspace(request.user, name)
     return redirect(f'/?workspace={workspace.pk}')
 
 
 def api(view):
     @wraps(view)
-    @login_required
+    @never_cache
     def wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'لطفاً وارد حساب شوید.'}, status=401)
         try:
             request.data = json.loads(request.body or '{}') if request.content_type == 'application/json' else request.POST
             if not isinstance(request.data, dict) and request.content_type == 'application/json':
                 raise ValidationError('دادهٔ درخواست باید یک شیء JSON باشد.')
-            return view(request, *args, **kwargs)
+            response = view(request, *args, **kwargs)
+            if response.status_code == 405:
+                return JsonResponse({'error': 'این روش درخواست مجاز نیست.'}, status=405)
+            return response
         except PermissionDenied:
             return JsonResponse({'error': 'به این گفتگو یا فضای کاری دسترسی ندارید.'}, status=403)
         except (ValidationError, ValueError, TypeError) as error:
             return JsonResponse({'error': ' '.join(error.messages) if isinstance(error, ValidationError) else 'درخواست نامعتبر است.'}, status=400)
-        except (Channel.DoesNotExist, Message.DoesNotExist, Workspace.DoesNotExist):
-            raise Http404
+        except (Http404, Channel.DoesNotExist, Message.DoesNotExist, Workspace.DoesNotExist):
+            return JsonResponse({'error': 'یافت نشد.'}, status=404)
         except IntegrityError:
             return JsonResponse({'error': 'این نام قبلاً استفاده شده است.'}, status=409)
     return wrapped
@@ -98,6 +98,7 @@ def admin_membership(user, workspace_id):
 
 
 @api
+@require_GET
 def bootstrap(request, workspace_id):
     channels = accessible_channels(request.user, workspace_id).order_by('kind', 'name')
     result = []
@@ -185,6 +186,7 @@ def read_channel(request, channel_id):
 
 
 @api
+@require_GET
 def search(request, workspace_id):
     channels = accessible_channels(request.user, workspace_id)
     query = request.GET.get('q', '').strip()
@@ -203,9 +205,9 @@ def invite(request, workspace_id):
     validate_email(email)
     rate_limit(f'invite:{request.user.pk}', 20, 3600)
     invitation = Invitation.objects.create(workspace=member.workspace, email=email, invited_by=request.user)
-    link = request.build_absolute_uri(f'/invite/{invitation.token}/')
+    link = f'{settings.FRONTEND_URL}/invite/{invitation.token}/' if settings.FRONTEND_URL else request.build_absolute_uri(f'/invite/{invitation.token}/')
     try:
-        send_mail(f'دعوت به {member.workspace.name} در تیم‌فلو', f'شما به {member.workspace.name} دعوت شده‌اید. تا هفت روز فرصت پذیرش دارید: {link}', None, [email])
+        send_mail(f'دعوت به {member.workspace.name} در اسنک', f'شما به {member.workspace.name} دعوت شده‌اید. تا هفت روز فرصت پذیرش دارید: {link}', None, [email])
     except (SMTPException, OSError):
         logging.getLogger(__name__).warning('Invitation email delivery failed for workspace %s', workspace_id)
         return JsonResponse({'error': 'ارسال ایمیل دعوت‌نامه ممکن نشد. تنظیمات ایمیل را بررسی و دوباره تلاش کنید.'}, status=503)

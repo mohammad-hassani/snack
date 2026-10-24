@@ -2,10 +2,11 @@ import json
 import uuid
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from chat.models import Channel, Membership, Workspace
 
 
+@override_settings(FRONTEND_URL='')
 class PersianInterfaceTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -15,7 +16,7 @@ class PersianInterfaceTests(TestCase):
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertContains(response, 'lang="fa" dir="rtl"')
-                self.assertContains(response, 'تیم‌فلو')
+                self.assertContains(response, 'اسنک')
                 self.assertNotContains(response, '>Sign in<')
                 self.assertNotContains(response, '>Password:')
         login = self.client.get('/accounts/login/')

@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
-from .models import Channel, ChannelMember, Membership, Message
+from .models import Channel, ChannelMember, Membership, Message, Workspace
 
 
 def accessible_channels(user, workspace_id):
@@ -116,3 +116,16 @@ def mark_read(user, channel_id, message_id):
         raise ValidationError('موقعیت خواندن پیام نامعتبر است.')
     member, _ = ChannelMember.objects.get_or_create(channel=channel, user=user)
     ChannelMember.objects.filter(pk=member.pk, last_read_id__lt=message_id).update(last_read_id=message_id)
+
+
+def provision_workspace(user, name):
+    from django.utils.text import slugify
+    if not name or len(name) > 80:
+        raise ValidationError('نام فضای کاری باید بین ۱ تا ۸۰ نویسه باشد.')
+    with transaction.atomic():
+        workspace = Workspace.objects.create(name=name, slug=f'{slugify(name)[:40] or "team"}-{uuid.uuid4().hex[:8]}')
+        Membership.objects.create(workspace=workspace, user=user, role='admin')
+        for channel_name, description in [('general', 'جایی برای خبرهای تیم، پرسش‌ها و گفتگوهای خوب.'), ('introductions', 'خودتان را معرفی کنید و با هم‌تیمی‌ها آشنا شوید.')]:
+            channel = Channel.objects.create(workspace=workspace, name=channel_name, description=description, created_by=user)
+            ChannelMember.objects.create(channel=channel, user=user)
+    return workspace

@@ -1,5 +1,5 @@
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'teamflow.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'snack.settings')
 from django.core.asgi import get_asgi_application
 django_application = get_asgi_application()
 from channels.auth import AuthMiddlewareStack
