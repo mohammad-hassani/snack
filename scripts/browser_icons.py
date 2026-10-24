@@ -11,17 +11,22 @@ with sync_playwright() as p:
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(BASE + '/accounts/login/')
-    expect(page.locator('.brand svg.lucide').first).to_be_visible()
+    expect(page.locator('.brand img.app-logo').first).to_be_visible()
+    assert page.locator('.brand img.app-logo').first.evaluate('(img) => img.complete && img.naturalWidth > 0')
+    expect(page.locator('link[rel="icon"]')).to_have_attribute('href', '/static/chat/logo.svg')
+    expect(page.locator('link[rel="apple-touch-icon"]')).to_have_attribute('href', '/static/chat/logo.svg')
     expect(page.locator('.theme-toggle svg.lucide')).to_be_visible()
     page.locator('#id_username').fill(os.getenv('SNACK_ADMIN_USERNAME', 'admin'))
     page.locator('#id_password').fill(os.getenv('SNACK_ADMIN_PASSWORD', 'admin'))
     page.get_by_role('button', name='ورود به اسنک').click()
     expect(page.locator('#message-input')).to_be_enabled()
-    for selector in ['.brand-mark', '#home-button', '#activity-button', '#workspace-button', '#add-channel', '#add-dm', '#invite-button', '#channel-members', '#channel-symbol', '#attach-button', '#emoji-button', '#send-button', '#search-form', '.theme-toggle']:
+    for selector in ['#home-button', '#activity-button', '#workspace-button', '#add-channel', '#add-dm', '#invite-button', '#channel-members', '#channel-symbol', '#attach-button', '#emoji-button', '#send-button', '#search-form', '.theme-toggle']:
         icon = page.locator(selector + ' svg.lucide').first
         expect(icon).to_be_visible()
         assert icon.get_attribute('aria-hidden') == 'true', selector
         assert page.locator(selector).inner_text().strip() not in ['＋', '↑', '☺', '☀', '☾', '⌂', '♧']
+    expect(page.locator('.brand-mark img.app-logo')).to_be_visible()
+    assert page.locator('.brand-mark img.app-logo').evaluate('(img) => img.complete && img.naturalWidth > 0')
     expect(page.locator('#attach-button svg.lucide-paperclip')).to_be_visible()
     page.locator('#add-channel').click()
     expect(page.locator('#close-modal svg.lucide')).to_be_visible()

@@ -119,3 +119,46 @@ formatting, dialogs, theme switching, and desktop/mobile navigation. Screenshots
 are in ignored `artifacts/icons-*.png`. Dependency installation audited 24
 packages with zero known vulnerabilities. Backend tests were not rerun for
 this UI-only change.
+
+## Selected hybrid frontend redesign
+
+The frontend now combines option 2's alternating chat bubbles and composer with
+option 3's unified dashboard sidebar. The current purple palette, supplied fonts,
+Lucide icons, dark mode, Django endpoints, and message storage are preserved.
+
+The production build, chat, account, icon, theme, and redesign browser suites
+passed. `scripts/browser_redesign.py` uses isolated screenshot fixtures to compare
+layout/content without changing stored messages; `scripts/browser_smoke.py`
+checks actual two-user APIs and WebSockets. Set `SNACK_ADMIN_USERNAME` and
+`SNACK_ADMIN_PASSWORD` when the local demo admin login differs from the default
+seeded email/password used by the chat smoke script.
+
+Visual QA, comparison iterations, responsive widths, intentional differences,
+and verification limits are recorded in `design-qa.md`.
+
+## Message formatting verification
+
+`node frontend/lib/format-message.test.mjs`, the production frontend build, and
+`scripts/browser_formatting.py` passed. The browser suite checks toolbar selection
+and caret placement, two-user styled delivery, edits, reloads, search, replies,
+multiline code, literal HTML safety, the message length limit, and mobile overflow.
+Reply previews also support mouse and keyboard navigation to the original message;
+an isolated browser history fixture verifies fetching an unloaded original.
+Use `CHROME_PATH` for an installed Chrome binary if Playwright Chromium is absent.
+Backend tests were not rerun for this frontend-only fix.
+
+## Supplied logo verification
+
+The supplied SVG and JPEG live in `static/chat/`. App branding and the favicon
+use the SVG; the home-screen icon uses the JPEG. Next.js and fallback Django
+pages share these assets. The production build and updated icon browser suite
+passed, including loaded logo images, icon metadata, dark mode, and mobile layout.
+Backend tests and installation on a physical home screen were not rerun.
+
+## Source folder cleanup
+
+React components, pages, and layouts now use `.jsx`; plain JavaScript utilities
+keep `.js`/`.mjs`. Django templates moved from the root into `chat/templates/`.
+The app template loader discovers them, with `chat` before Django admin to preserve
+our registration template priority. All 27 Django tests and the Next.js production
+build passed after the move. Browser suites were not repeated for these renames.

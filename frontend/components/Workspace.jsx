@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Asterisk } from "lucide-react";
 import { api } from "../lib/api";
 import { WorkspaceForm } from "./Auth";
 import Chat from "./Chat";
@@ -43,7 +42,7 @@ export default function Workspace() {
       <main className="auth-simple">
         <section className="auth-card">
           <a className="brand" href="/">
-            <Asterisk size={28} aria-hidden="true" /> اسنک
+            <img className="app-logo" src="/static/chat/logo.svg" width={28} height={28} alt="" /> اسنک
           </a>
           <h1>فضای کاری تیم شما کجاست؟</h1>
           <WorkspaceForm

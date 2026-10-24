@@ -1,7 +1,9 @@
 import "./globals.css";
+import "./redesign.css";
 import ThemeToggle from "../components/ThemeToggle";
 export const metadata = {
   title: "اسنک · هماهنگ‌تر با هم",
+  icons: { icon: "/static/chat/logo.svg", apple: "/static/chat/logo.svg" },
   description: "گفتگوهای تیم شما در یک فضای کاری",
 };
 export default function Layout({ children }) {

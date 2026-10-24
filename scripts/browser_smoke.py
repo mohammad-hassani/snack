@@ -11,11 +11,11 @@ ARTIFACTS = Path('artifacts')
 ARTIFACTS.mkdir(exist_ok=True)
 
 
-def sign_in(page, email):
+def sign_in(page, email, password=PASSWORD):
     page.goto(BASE)
     page.wait_for_load_state('networkidle')
     page.locator('#id_username').fill(email)
-    page.locator('#id_password').fill(PASSWORD)
+    page.locator('#id_password').fill(password)
     page.locator('form button.primary').click()
     expect(page.locator('#channel-name')).to_have_text('general')
     expect(page.locator('#connection')).to_have_text('متصل')
@@ -28,7 +28,7 @@ with sync_playwright() as p:
     page = context.new_page()
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
-    sign_in(page, 'mina@snack.local')
+    sign_in(page, os.getenv('SNACK_ADMIN_USERNAME', 'mina@snack.local'), os.getenv('SNACK_ADMIN_PASSWORD', PASSWORD))
     page.screenshot(path=str(ARTIFACTS / 'workspace-desktop.png'), full_page=True)
     second = browser.new_context(viewport={'width': 1280, 'height': 900})
     teammate = second.new_page()
@@ -36,8 +36,9 @@ with sync_playwright() as p:
     sign_in(teammate, 'omid@snack.local')
     assert page.locator('html').get_attribute('lang') == 'fa'
     assert page.locator('html').get_attribute('dir') == 'rtl'
-    rail, sidebar, main = [page.locator(selector).bounding_box() for selector in ['.rail', '.sidebar', '.main']]
-    assert rail['x'] > sidebar['x'] > main['x'], 'Desktop navigation is not mirrored'
+    sidebar, main = [page.locator(selector).bounding_box() for selector in ['.sidebar', '.main']]
+    assert sidebar['x'] > main['x'], 'Desktop navigation is not mirrored'
+    assert page.locator('.rail').count() == 0, 'Navigation should use one unified sidebar'
     unique = f'آزمایش فارسی {time.time_ns()} — API v2 و نسخهٔ ۱۲۳'
     page.locator('#message-input').fill(unique)
     page.locator('#send-button').click()
@@ -103,7 +104,9 @@ with sync_playwright() as p:
     page.locator('#mobile-menu').click()
     expect(page.locator('#sidebar')).to_be_visible()
     assert page.locator('#sidebar').bounding_box()['x'] > 0, 'Mobile drawer should open from the right'
-    assert page.locator('#sidebar').bounding_box()['x'] + page.locator('#sidebar').bounding_box()['width'] <= page.locator('.rail').bounding_box()['x'] + 1
+    assert page.locator('#sidebar').bounding_box()['x'] + page.locator('#sidebar').bounding_box()['width'] <= 391
+    page.locator('#close-sidebar').click()
+    expect(page.locator('#sidebar')).not_to_be_visible()
     assert not errors, errors
     browser.close()
     print('Browser smoke passed: live delivery, edit/delete, replies, uploads, search, reconnect, private channel, DM, reload, mobile; no JS errors.')

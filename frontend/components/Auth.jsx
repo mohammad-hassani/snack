@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Asterisk, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { api } from "../lib/api";
 
 export function WorkspaceForm({ onCreated }) {
@@ -96,7 +96,7 @@ export default function Auth({ path = [] }) {
     <main className="auth-layout">
       <section className="auth-story">
         <a className="brand" href="/">
-          <Asterisk size={28} aria-hidden="true" /> اسنک
+          <img className="app-logo" src="/static/chat/logo.svg" width={28} height={28} alt="" /> اسنک
         </a>
         <div>
           <span className="eyebrow">کار خوب با یک گفتگو شروع می‌شود</span>
@@ -123,7 +123,7 @@ export default function Auth({ path = [] }) {
       <section className="auth-panel">
         <div className="auth-card">
           <a className="brand" href="/">
-            <Asterisk size={28} aria-hidden="true" /> اسنک
+            <img className="app-logo" src="/static/chat/logo.svg" width={28} height={28} alt="" /> اسنک
           </a>
           <h1>{title}</h1>
           {done ? (

@@ -38,6 +38,7 @@ The command prints a generated password. Sign in as `mina@snack.local`. It creat
 
 ## Included
 
+- Unified dashboard sidebar and alternating chat bubbles, with rounded controls and tactile button states. Mobile navigation opens as a dismissible drawer.
 - Light/dark theme toggle on every Next.js page (sun/moon button at the top left). First visit follows the device theme; an explicit choice is saved locally and applied before the page paints.
 
 - Email/password registration and sign-in, POST logout, session authentication, password reset.
@@ -102,6 +103,7 @@ python manage.py seed_demo --password "$SNACK_DEMO_PASSWORD"
 python scripts/browser_smoke.py
 python scripts/browser_accounts.py
 python scripts/browser_theme.py
+python scripts/browser_redesign.py
 ```
 
 Set `SNACK_URL` for another server and optionally `CHROME_PATH` for an installed Chromium/Chrome binary. Screenshots are written to `artifacts/`. Run `python scripts/browser_accounts.py` as well to check signup, onboarding, invitation acceptance through signup, member permissions, logout, invalid login, and password-reset requests. These browser scripts create accounts and messages; use a development database only. Set `CHROME_PATH` when running them with an installed Chrome binary.
@@ -164,6 +166,8 @@ Connect to `/ws/workspaces/{id}/` with the session cookie and a permitted Origin
 
 This implements the PRD's first-phase MVP. Billing, subscriptions, calls, SSO, group DMs, emoji reactions, pinned messages, advanced threads/search, push/email message notifications, integrations, and enterprise audit/retention policies belong to later phases.
 
-When `FRONTEND_URL` is set, old Django page URLs redirect to the Next.js interface while preserving the path and query string. The original templates remain as a fallback when `FRONTEND_URL` is empty. Shared CSS and local Persian fonts are reused by both.
+When `FRONTEND_URL` is set, old Django page URLs redirect to the Next.js interface while preserving the path and query string. Django templates live in `chat/templates/` and remain as a fallback when `FRONTEND_URL` is empty. Shared CSS and local Persian fonts are reused by both.
 
 Known limits: search uses portable database substring queries; presence can take 45 seconds to expire; files use protected local storage instead of S3; uploads are validated but not malware-scanned; messages broadcast after commit without a transactional outbox (clients recover from durable history); background email queues and OpenTelemetry are not integrated. History restores missed sends and the latest 50 edits/deletions on reconnect; reload older history to refresh older mutations. Rate limits use the configured cache and the local fallback applies per process. PostgreSQL serializes sends per conversation; SQLite is intended for local use. Browser drafts live in session storage and attached files must be reselected after a reload. Load, TLS, email deliverability, encrypted infrastructure, and backup scheduling must be validated on the actual deployment before customer rollout.
+
+React components and Next.js pages/layouts use `.jsx` in `frontend/`; plain JavaScript utilities and configuration keep `.js` or `.mjs`. Django discovers `chat/templates/` through its app template loader, including password-reset emails.

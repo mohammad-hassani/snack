@@ -1,14 +1,15 @@
 "use client";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowUp,
   ArrowUpRight,
-  Asterisk,
   Bold,
   Code,
   CornerDownLeft,
   Download,
+  FileText,
+  Send,
   Hash,
   House,
   Inbox,
@@ -31,6 +32,7 @@ import {
 } from "lucide-react";
 import { api } from "../lib/api";
 import { WorkspaceForm } from "./Auth";
+import MessageText from "./MessageText";
 
 const number = new Intl.NumberFormat("fa-IR");
 const colors = ["lavender", "mint", "peach", "blue", "rose"];
@@ -134,11 +136,30 @@ export default function Chat({ workspace, workspaces, user }) {
   const scroll = useRef(null),
     input = useRef(null),
     upload = useRef(null),
-    handlers = useRef({});
+    handlers = useRef({}),
+    formatSelection = useRef(null);
   const lastTyping = useRef(0),
     typingTimer = useRef(null),
     refreshTimer = useRef(null),
     pending = useRef(false);
+  useLayoutEffect(() => {
+    if (!formatSelection.current) return;
+    input.current.focus();
+    input.current.setSelectionRange(...formatSelection.current);
+    formatSelection.current = null;
+  }, [body]);
+  useEffect(() => {
+    if (!sidebar) return;
+    document.getElementById("close-sidebar")?.focus();
+    const escape = (event) => {
+      if (event.key === "Escape") {
+        setSidebar(false);
+        document.getElementById("mobile-menu")?.focus();
+      }
+    };
+    document.addEventListener("keydown", escape);
+    return () => document.removeEventListener("keydown", escape);
+  }, [sidebar]);
   const draftKey = (id) => `snack:${user.id}:${workspace.id}:${id}`;
   const toast = (error) =>
     setNotice(typeof error === "string" ? error : error.message);
@@ -478,13 +499,38 @@ export default function Chat({ workspace, workspaces, user }) {
       merge(page.messages);
       setHasMore(page.has_more);
       requestAnimationFrame(() => {
+        if (request !== generation.current || !scroll.current) return;
         scroll.current.scrollTop += scroll.current.scrollHeight - height;
       });
+      return page;
     } catch (error) {
       toast(error);
     } finally {
       setOlderLoading(false);
     }
+  }
+  async function jumpToMessage(id) {
+    const request = generation.current;
+    while (!rows.current.some((message) => message.id === id)) {
+      const before = rows.current[0]?.id;
+      const page = await loadOlder();
+      if (request !== generation.current) return;
+      if (!page) return;
+      if (
+        !rows.current.some((message) => message.id === id) &&
+        (!page.has_more || rows.current[0]?.id === before)
+      ) {
+        toast("پیام اصلی در دسترس نیست.");
+        return;
+      }
+    }
+    requestAnimationFrame(() => {
+      if (request !== generation.current) return;
+      const target = document.getElementById(`message-${id}`);
+      if (!target) return;
+      target.scrollIntoView({ block: "center" });
+      target.focus({ preventScroll: true });
+    });
   }
   function edit(message) {
     setModal({
@@ -600,14 +646,21 @@ export default function Chat({ workspace, workspaces, user }) {
   function format(mark) {
     const start = input.current.selectionStart,
       end = input.current.selectionEnd;
+    const block = mark === "`" && body.slice(start, end).includes("\n");
+    const open = block ? "```\n" : mark,
+      close = block ? "\n```" : mark;
+    if (body.length + open.length + close.length > 4000) {
+      toast("پیام باید حداکثر ۴۰۰۰ نویسه باشد.");
+      return;
+    }
+    formatSelection.current = [start + open.length, end + open.length];
     changeBody(
       body.slice(0, start) +
-        mark +
+        open +
         body.slice(start, end) +
-        mark +
+        close +
         body.slice(end),
     );
-    input.current.focus();
   }
   const unread = data.channels.reduce(
     (sum, channel) => sum + channel.unread,
@@ -633,7 +686,7 @@ export default function Chat({ workspace, workspaces, user }) {
             )}
           </span>
         )}
-        <span>{channel.name}</span>
+        <span dir="auto">{channel.name}</span>
         {channel.unread > 0 && (
           <span className="count">{number.format(channel.unread)}</span>
         )}
@@ -644,64 +697,32 @@ export default function Chat({ workspace, workspaces, user }) {
   return (
     <>
       <div id="app" className="app">
-        <aside className="rail" aria-label="ناوبری اصلی">
-          <a className="brand-mark" href="/" aria-label="صفحهٔ اصلی اسنک">
-            <Asterisk size={32} aria-hidden="true" />
-          </a>
+        {sidebar && (
           <button
-            id="home-button"
-            className="rail-item active"
-            onClick={() => {
-              if (data.channels[0]) openChannel(data.channels[0]).catch(toast);
-            }}
-          >
-            <House size={24} aria-hidden="true" />
-            <small>خانه</small>
-          </button>
-          <button
-            id="activity-button"
-            className="rail-item"
-            onClick={() => activity()}
-          >
-            <Activity size={24} aria-hidden="true" />
-            <small>فعالیت‌ها</small>
-            <i id="activity-count" hidden={!unread} />
-          </button>
-          <div className="rail-bottom">
+            className="sidebar-backdrop"
+            aria-label="بستن منو"
+            onClick={() => setSidebar(false)}
+          />
+        )}
+        <aside
+          id="sidebar"
+          className={`sidebar${sidebar ? " open" : ""}`}
+          aria-label="فضای کاری و گفتگوها"
+        >
+          <div className="sidebar-brand">
+            <a className="brand-mark" href="/" aria-label="صفحهٔ اصلی اسنک">
+              <img className="app-logo" src="/static/chat/logo.svg" width={36} height={36} alt="" />
+              <span>اسنک</span>
+            </a>
             <button
-              id="workspace-button"
-              className="rail-item"
-              title="ساخت فضای کاری"
-              onClick={() =>
-                setModal({
-                  title: "یک فضای کاری تازه برای تیم شما",
-                  content: (
-                    <WorkspaceForm
-                      onCreated={(result) =>
-                        location.assign(`/?workspace=${result.id}`)
-                      }
-                    />
-                  ),
-                })
-              }
+              id="close-sidebar"
+              className="icon-button"
+              aria-label="بستن منو"
+              onClick={() => setSidebar(false)}
             >
-              <Plus size={18} aria-hidden="true" />
-            </button>
-            <button
-              id="profile"
-              className="avatar lavender"
-              title="خروج از حساب"
-              onClick={() =>
-                api("/api/auth/logout/", { method: "POST" })
-                  .then(() => location.assign("/accounts/login/"))
-                  .catch(toast)
-              }
-            >
-              {user.name.slice(0, 1)}
+              <X size={22} aria-hidden="true" />
             </button>
           </div>
-        </aside>
-        <aside id="sidebar" className={`sidebar${sidebar ? " open" : ""}`}>
           <div className="workspace-head">
             <div className="workspace-logo">{workspace.name.slice(0, 1)}</div>
             <label className="sr-only" htmlFor="workspace-select">
@@ -720,68 +741,96 @@ export default function Chat({ workspace, workspaces, user }) {
                 </option>
               ))}
             </select>
-            <span className="workspace-dot" />
           </div>
-          <div className="workspace-caption">تیم شما، هماهنگ‌تر از همیشه</div>
-          <button
-            className="nav-row"
-            id="all-button"
-            onClick={() => activity(true)}
-          >
-            <LayoutGrid size={18} aria-hidden="true" /> همهٔ گفتگوها
-          </button>
-          <button
-            className="nav-row"
-            id="unread-button"
-            onClick={() => activity()}
-          >
-            <Inbox size={18} aria-hidden="true" /> خوانده‌نشده{" "}
-            <span className="count" id="unread-count">
-              {number.format(unread)}
-            </span>
-          </button>
-          <div className="section-heading">
-            <span>کانال‌ها</span>
+          <nav className="dashboard-nav" aria-label="ناوبری اصلی">
             <button
-              id="add-channel"
-              aria-label="ساخت کانال"
+              id="home-button"
+              className="dashboard-tile active"
               onClick={() => {
-                setKind("public");
-                setModal({ title: "ساخت کانال", type: "channel" });
+                if (data.channels[0])
+                  openChannel(data.channels[0]).catch(toast);
               }}
             >
-              <Plus size={18} aria-hidden="true" />
+              <House size={32} aria-hidden="true" />
+              <span>خانه</span>
             </button>
-          </div>
-          <nav id="channels" aria-label="کانال‌ها">
-            {data.channels.filter((channel) => channel.kind !== "dm").map(nav)}
-          </nav>
-          <div className="section-heading">
-            <span>پیام‌های مستقیم</span>
             <button
-              id="add-dm"
-              aria-label="شروع گفتگوی مستقیم"
-              onClick={() => setModal({ title: "شروع گفتگو", type: "direct" })}
+              id="activity-button"
+              className="dashboard-tile"
+              onClick={() => activity()}
             >
-              <Plus size={18} aria-hidden="true" />
+              <Activity size={32} aria-hidden="true" />
+              <span>فعالیت‌ها</span>
+              <i id="activity-count" hidden={!unread} />
             </button>
-          </div>
-          <nav id="directs" aria-label="پیام‌های مستقیم">
-            {data.channels.filter((channel) => channel.kind === "dm").map(nav)}
           </nav>
-          <div className="sidebar-foot">
-            <div className="invite-art">
-              <Sparkles size={24} aria-hidden="true" />{" "}
-              <span>با هم، بهتر.</span>
+          <div className="sidebar-scroll">
+            <div className="sidebar-shortcuts">
+              <button
+                className="nav-row"
+                id="all-button"
+                onClick={() => activity(true)}
+              >
+                <LayoutGrid size={16} aria-hidden="true" />
+                همهٔ گفتگوها
+              </button>
+              <button
+                className="nav-row"
+                id="unread-button"
+                onClick={() => activity()}
+              >
+                <Inbox size={16} aria-hidden="true" />
+                خوانده‌نشده{" "}
+                <span className="count" id="unread-count">
+                  {number.format(unread)}
+                </span>
+              </button>
             </div>
-            <p>با هم‌تیمی‌هایتان کارهای خوبی رقم بزنید.</p>
+            <div className="section-heading">
+              <span>کانال‌ها</span>
+              <button
+                id="add-channel"
+                aria-label="ساخت کانال"
+                onClick={() => {
+                  setKind("public");
+                  setModal({ title: "ساخت کانال", type: "channel" });
+                }}
+              >
+                <Plus size={19} aria-hidden="true" />
+              </button>
+            </div>
+            <nav id="channels" aria-label="کانال‌ها">
+              {data.channels
+                .filter((channel) => channel.kind !== "dm")
+                .map(nav)}
+            </nav>
+            <div className="section-heading">
+              <span>پیام‌های مستقیم</span>
+              <button
+                id="add-dm"
+                aria-label="شروع گفتگوی مستقیم"
+                onClick={() =>
+                  setModal({ title: "شروع گفتگو", type: "direct" })
+                }
+              >
+                <Plus size={19} aria-hidden="true" />
+              </button>
+            </div>
+            <nav id="directs" aria-label="پیام‌های مستقیم">
+              {data.channels
+                .filter((channel) => channel.kind === "dm")
+                .map(nav)}
+            </nav>
+          </div>
+          <div className="sidebar-foot">
             <button
               id="invite-button"
               className="invite-button"
               hidden={data.me.role !== "admin"}
               onClick={invite}
             >
-              <UserPlus size={17} aria-hidden="true" /> دعوت هم‌تیمی‌ها
+              <UserPlus size={22} aria-hidden="true" />
+              دعوت هم‌تیمی‌ها
             </button>
             <button
               id="members-button"
@@ -793,6 +842,43 @@ export default function Chat({ workspace, workspaces, user }) {
               مدیریت اعضا
             </button>
           </div>
+          <div className="sidebar-profile">
+            <button
+              id="profile"
+              className="profile-button"
+              title="خروج از حساب"
+              onClick={() =>
+                api("/api/auth/logout/", { method: "POST" })
+                  .then(() => location.assign("/accounts/login/"))
+                  .catch(toast)
+              }
+            >
+              <Avatar name={user.name} id={user.id} />
+              <span>
+                <b>{user.name}</b>
+                <small>خروج از حساب</small>
+              </span>
+            </button>
+            <button
+              id="workspace-button"
+              className="icon-button"
+              title="ساخت فضای کاری"
+              onClick={() =>
+                setModal({
+                  title: "یک فضای کاری تازه برای تیم شما",
+                  content: (
+                    <WorkspaceForm
+                      onCreated={(result) =>
+                        location.assign(`/?workspace=${result.id}`)
+                      }
+                    />
+                  ),
+                })
+              }
+            >
+              <Plus size={22} aria-hidden="true" />
+            </button>
+          </div>
         </aside>
         <main className="main">
           <header className="topbar">
@@ -801,6 +887,7 @@ export default function Chat({ workspace, workspaces, user }) {
               className="icon-button"
               aria-label="باز و بسته کردن منو"
               aria-expanded={sidebar}
+              aria-controls="sidebar"
               onClick={() => setSidebar(!sidebar)}
             >
               <Menu size={22} aria-hidden="true" />
@@ -881,18 +968,6 @@ export default function Chat({ workspace, workspaces, user }) {
               <span> عضو</span>
             </button>
           </div>
-          <div className="conversation-tabs">
-            <button
-              className="selected"
-              id="messages-tab"
-              onClick={() => setResults(null)}
-            >
-              پیام‌ها
-            </button>
-            <span className="channel-note">
-              <i /> فضایی برای تیم شما
-            </span>
-          </div>
           {results !== null && (
             <section id="search-results" className="search-results">
               <div className="results-heading">
@@ -935,7 +1010,7 @@ export default function Chat({ workspace, workspaces, user }) {
                       #{message.channel_name} · {message.sender} ·{" "}
                       {new Date(message.created_at).toLocaleDateString("fa-IR")}
                     </small>
-                    {message.body}
+                    <MessageText text={message.body} inline />
                   </button>
                 ))}
                 {!results.length && (
@@ -945,7 +1020,11 @@ export default function Chat({ workspace, workspaces, user }) {
             </section>
           )}
           <div ref={scroll} className="message-scroll" id="message-scroll">
-            <div className="channel-welcome" id="channel-welcome">
+            <div
+              className="channel-welcome"
+              id="channel-welcome"
+              hidden={loading || messages.length > 0}
+            >
               <div className="welcome-symbol">
                 <Hash size={30} aria-hidden="true" />
               </div>
@@ -1000,7 +1079,11 @@ export default function Chat({ workspace, workspaces, user }) {
                 return (
                   <Fragment key={message.id}>
                     {divider && <div className="date-divider">{label}</div>}
-                    <article className="message" id={`message-${message.id}`}>
+                    <article
+                      className={`message ${message.sender_id === user.id ? "message-own" : "message-other"}`}
+                      id={`message-${message.id}`}
+                      tabIndex={-1}
+                    >
                       <Avatar name={message.sender} id={message.sender_id} />
                       <div className="message-content">
                         <div className="message-meta">
@@ -1018,37 +1101,66 @@ export default function Chat({ workspace, workspaces, user }) {
                             <small className="you">ویرایش‌شده</small>
                           )}
                         </div>
-                        {message.reply_to && !message.deleted && (
-                          <div className="reply-ref">
-                            <Reply size={14} aria-hidden="true" />{" "}
-                            {original
-                              ? `${original.sender}: ${original.deleted ? "پیام حذف شده" : original.body.slice(0, 120)}`
-                              : "پاسخ به یک پیام قدیمی‌تر"}
+                        {(message.body ||
+                          message.deleted ||
+                          message.reply_to) && (
+                          <div className="message-bubble">
+                            {message.reply_to && !message.deleted && (
+                              <button
+                                type="button"
+                                className="reply-ref"
+                                disabled={olderLoading}
+                                aria-label="رفتن به پیام اصلی"
+                                onClick={() => jumpToMessage(message.reply_to)}
+                              >
+                                <Reply size={14} aria-hidden="true" />{" "}
+                                {original ? (
+                                  <>
+                                    {original.sender}:{" "}
+                                    {original.deleted ? (
+                                      "پیام حذف شده"
+                                    ) : (
+                                      <MessageText
+                                        text={original.body.slice(0, 120)}
+                                        inline
+                                      />
+                                    )}
+                                  </>
+                                ) : (
+                                  "پاسخ به یک پیام قدیمی‌تر"
+                                )}
+                              </button>
+                            )}
+                            <p
+                              dir="auto"
+                              className={`message-body${message.deleted ? " deleted" : ""}`}
+                            >
+                              {message.deleted ? (
+                                "این پیام حذف شده است."
+                              ) : (
+                                <MessageText text={message.body} />
+                              )}
+                            </p>
                           </div>
                         )}
-                        <p
-                          dir="auto"
-                          className={`message-body${message.deleted ? " deleted" : ""}`}
-                        >
-                          {message.deleted
-                            ? "این پیام حذف شده است."
-                            : message.body}
-                        </p>
                         {message.attachment && !message.deleted && (
                           <a
                             className="attachment-link"
                             href={message.attachment.url}
                           >
-                            <span>
-                              <Download size={16} aria-hidden="true" />{" "}
-                              {message.attachment.name}
+                            <span className="attachment-icon">
+                              <FileText size={23} aria-hidden="true" />
                             </span>
-                            <small>
-                              {number.format(
-                                Math.ceil(message.attachment.size / 1024),
-                              )}{" "}
-                              کیلوبایت
-                            </small>
+                            <span className="attachment-details">
+                              <b>{message.attachment.name}</b>
+                              <small>
+                                {number.format(
+                                  Math.ceil(message.attachment.size / 1024),
+                                )}{" "}
+                                کیلوبایت
+                              </small>
+                            </span>
+                            <Download size={19} aria-hidden="true" />
                           </a>
                         )}
                         {!message.deleted && (
@@ -1101,6 +1213,8 @@ export default function Chat({ workspace, workspaces, user }) {
                     key={mark}
                     type="button"
                     aria-label={label}
+                    disabled={sending || !current}
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => format(mark)}
                   >
                     <Icon size={16} aria-hidden="true" />
@@ -1112,7 +1226,8 @@ export default function Chat({ workspace, workspaces, user }) {
               </div>
               {reply && (
                 <div id="reply-banner" className="reply-banner">
-                  پاسخ به {reply.sender}: {reply.body.slice(0, 90)}
+                  پاسخ به {reply.sender}:{" "}
+                  <MessageText text={reply.body.slice(0, 90)} inline />
                   <button
                     type="button"
                     aria-label="لغو پاسخ"
@@ -1240,7 +1355,7 @@ export default function Chat({ workspace, workspaces, user }) {
                   aria-label="ارسال پیام"
                   disabled={sending || !current || loading}
                 >
-                  <ArrowUp size={19} aria-hidden="true" />
+                  <Send size={22} aria-hidden="true" />
                 </button>
               </div>
             </form>
@@ -1249,7 +1364,7 @@ export default function Chat({ workspace, workspaces, user }) {
               برای خط جدید{" "}
               <span>
                 اینجا همکاری جریان دارد.{" "}
-                <Asterisk size={32} aria-hidden="true" />
+                <img className="app-logo" src="/static/chat/logo.svg" width={32} height={32} alt="" />
               </span>
             </p>
           </div>

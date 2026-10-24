@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <g transform="translate(-172, -62)">
+    <!-- Top-Left: Quarter Circle -->
+    <path d="M 212 190 A 80 80 0 0 1 292 110 L 292 190 Z" fill="#1A1B22" />
+    <!-- Middle-Left: Rounded Module -->
+    <rect x="212" y="190" width="80" height="80" rx="18" fill="#7E22CE" />
+    <!-- Left-Center: Semi-Circle Bridge -->
+    <path d="M 292 110 A 80 80 0 0 1 292 270 Z" fill="#7E22CE" />
+    <!-- Bottom-Left: Chat Bubble Base + Tail -->
+    <path d="M 212 270 L 372 270 L 372 350 L 292 414 L 292 350 A 80 80 0 0 1 212 270 Z" fill="#1A1B22" />
+    <!-- Top-Right: Bite-Sized Curved Track -->
+    <path d="M 372 110 L 422 110 A 30 30 0 0 0 452 140 L 452 190 A 80 80 0 0 1 372 110 Z" fill="#1A1B22" />
+    <!-- Center-Right: Chamfered Data Block -->
+    <path d="M 372 190 L 424 190 A 28 28 0 0 1 452 218 L 452 270 L 392 270 A 20 20 0 0 1 372 250 Z" fill="#1A1B22" />
+    <!-- Bottom-Right: Bitten Leaf Module -->
+    <path d="M 452 190 L 484 190 A 48 48 0 0 0 532 238 L 532 290 A 60 60 0 0 1 472 350 L 372 350 A 80 80 0 0 1 452 270 Z" fill="#7E22CE" />
+  </g>
+</svg>

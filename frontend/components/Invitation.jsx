@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Asterisk } from "lucide-react";
 import { api } from "../lib/api";
 export default function Invitation({ token }) {
   const [invite, setInvite] = useState(null),
@@ -15,7 +14,7 @@ export default function Invitation({ token }) {
     <main className="auth-simple">
       <section className="auth-card">
         <a href="/" className="brand">
-          <Asterisk size={28} aria-hidden="true" /> اسنک
+          <img className="app-logo" src="/static/chat/logo.svg" width={28} height={28} alt="" /> اسنک
         </a>
         <h1>دعوت به {invite?.workspace || "فضای کاری"}</h1>
         {error && <p role="alert">{error}</p>}
